@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>歼‑20两相吸波填料电磁参数虚拟仿真</title>
+<style>
+*{box-sizing:border-box;font-family:"Microsoft YaHei",sans-serif;margin:0;padding:0;}
+body{background:#121a2b;color:#ffffff;padding:24px;max-width:960px;margin:0 auto;}
+h1{text-align:center;font-size:26px;margin-bottom:20px;}
+.block{background:#1e2b42;border-radius:10px;padding:20px;margin-bottom:18px;}
+h2{font-size:20px;margin-bottom:12px;color:#a6d7ff;}
+p{font-size:17px;line-height:1.6;margin:6px 0;}
+.slider-area{margin:18px 0;}
+input[type="range"]{width:100%;height:8px;margin-top:8px;}
+table{width:100%;border-collapse:collapse;margin-top:10px;font-size:18px;}
+th,td{border:1px solid #44597a;padding:12px;text-align:center;}
+th{background:#2b3b58;}
+.note{font-size:14px;color:#b7c8e2;margin-top:10px;}
+</style>
+</head>
+<body>
+<h1>歼‑20 两相吸波填料电磁参数虚拟仿真</h1>
+
+<div class="block">
+<h2>一、基础材料本征参数</h2>
+<p>碳纳米管：ε'=15.0，ε''=3.0，μ'=1.0，μ''=0.002</p>
+<p>羰基铁粉：ε'=18.0，ε''=4.5，μ'=2.8，μ''=1.12</p>
+</div>
+
+<div class="block">
+<h2>二、计算公式（Lichtenecker对数混合模型）</h2>
+<p>lnε'ₑff = v₁·lnε'₁ + v₂·lnε'₂</p>
+<p>lnε''ₑff = v₁·lnε''₁ + v₂·lnε''₂</p>
+<p>lnμ'ₑff = v₁·lnμ'₁ + v₂·lnμ'₂</p>
+<p>lnμ''ₑff = v₁·lnμ''₁ + v₂·lnμ''₂</p>
+<p>介电损耗正切：tanδₑ,ₑff = ε''ₑff / ε'ₑff</p>
+<p>磁损耗正切：tanδₘ,ₑff = μ''ₑff / μ'ₑff</p>
+<p>简化相对本征阻抗：ηₑff = √( μ'ₑff / ε'ₑff )</p>
+<p>符号说明：v₁：碳纳米管体积分数；v₂=1−v₁：羰基铁粉体积分数</p>
+</div>
+
+<div class="block">
+<h2>三、组分比例调节</h2>
+<p>碳纳米管体积分数：<span id="cntPercent">50</span> %</p>
+<input type="range" id="sliderCnt" min="0" max="100" value="50">
+<p>羰基铁粉体积分数：<span id="cipPercent">50</span> %</p>
+</div>
+
+<div class="block">
+<h2>四、仿真计算结果</h2>
+<table>
+<tr>
+<th>tanδₑ,ₑff</th>
+<th>tanδₘ,ₑff</th>
+<th>ηₑff</th>
+</tr>
+<tr id="resultRow">
+<td id="tane">--</td>
+<td id="tanm">--</td>
+<td id="eta">--</td>
+</tr>
+</table>
+<p class="note">说明：理论仿真计算，仅用于比赛课堂演示；歼‑20实际涂层配方涉密。</p>
+</div>
+
+<script>
+//基础参数
+const cnt = {ep1:15.0, ep2:3.0, mu1:1.0, mu2:0.002};
+const cip = {ep1:18.0, ep2:4.5, mu1:2.8, mu2:1.12};
+const slider = document.getElementById("sliderCnt");
+const txtCnt = document.getElementById("cntPercent");
+const txtCip = document.getElementById("cipPercent");
+
+function calculate(pCnt){
+    const v1 = pCnt / 100.0;
+    const v2 = 1 - v1;
+    //Lichtenecker对数混合法则
+    const ep1_eff = Math.exp(v1 * Math.log(cnt.ep1) + v2 * Math.log(cip.ep1));
+    const ep2_eff = Math.exp(v1 * Math.log(cnt.ep2) + v2 * Math.log(cip.ep2));
+    const mu1_eff = Math.exp(v1 * Math.log(cnt.mu1) + v2 * Math.log(cip.mu1));
+    const mu2_eff = Math.exp(v1 * Math.log(cnt.mu2) + v2 * Math.log(cip.mu2));
+    const tanDe = ep2_eff / ep1_eff;
+    const tanDm = mu2_eff / mu1_eff;
+    const eta = Math.sqrt(mu1_eff / ep1_eff);
+    return {tanDe,tanDm,eta};
+}
+
+function updateUI(){
+    const p = Number(slider.value);
+    txtCnt.textContent = p;
+    txtCip.textContent = 100-p;
+    const res = calculate(p);
+    document.getElementById("tane").textContent = res.tanDe.toFixed(3);
+    document.getElementById("tanm").textContent = res.tanDm.toFixed(3);
+    document.getElementById("eta").textContent = res.eta.toFixed(3);
+}
+slider.addEventListener("input",updateUI);
+updateUI();
+</script>
+</body>
+</html>
